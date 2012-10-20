@@ -5,13 +5,14 @@ fs = require 'fs'
 http = require 'http'
 util = require 'util'
 
+# 要读取的小组ID
 groupID = [155, 172, 160, 155, 119, 116, 91, 94, 62, 27, 65, 36, 39, 38, 148, 99, 93, 63, 127, 79, 69, 30, 31]
 
 
 all = []
 task = ->
   nall = []
-  antiSame = {}
+  antiDuplicate = {}
   async.forEach groupID, (id, next) ->
     request "http://www.guokr.com/group/posts/#{id}/", (err, res, body) ->
       if not body
@@ -38,8 +39,8 @@ task = ->
         time = time.trim()
 
         url = data.replace /^.+\/post\/(\d+).+$/, "http://www.guokr.com/post/$1/"
-        if antiSame[url] then continue
-        antiSame[url] = true
+        if antiDuplicate [url] then continue
+        antiDuplicate[url] = true
 
         currentData =
           belong: belong
@@ -63,7 +64,7 @@ setInterval task, 1000 * 60 * 10
 
 
 http.createServer((req, res) ->
-  if process.env.NODE_ENV == 'DEVELOPMENT'
+  if process.env.NODE_ENV is 'DEVELOPMENT'
     mu.clearCache()
 
   stream = mu.compileAndRender 'index.html', items: all
